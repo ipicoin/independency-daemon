@@ -49,3 +49,6 @@ dependency-graph.png
 
 # Dev environment
 .direnv/
+
+# devnet faucet secret
+devnet/.env

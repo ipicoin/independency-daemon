@@ -1,0 +1,85 @@
+# docker-compose dla lokalnego devnet IPI: pojedynczy węzeł ipid + opcjonalny faucet.
+#
+# Użycie:
+#   1. Zbuduj obraz z rootu repo:  docker build -t ipicoin/ipid:devnet .
+#      (Dockerfile w repo buduje binarkę — dziś 'wasmd', po migracji #1 'ipid').
+#   2. Podnieś sieć:               docker compose -f devnet/docker-compose.yml up -d
+#   3. Faucet:                     docker compose -f devnet/docker-compose.yml --profile faucet up -d
+#
+# Dane węzła trwają w wolumenie 'ipid-home'. Reset: docker compose ... down -v
+#
+# UWAGA: obraz z repo instaluje binarkę jako /usr/bin/wasmd. Dlatego IPID_BIN=wasmd.
+# Po migracji ipid->wasmd (#1) zmień na ipid.
+
+name: ipi-devnet
+
+services:
+  node:
+    image: ipicoin/ipid:devnet
+    container_name: ipi-devnet-node
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        if [ ! -f /root/.ipid/config/genesis.json ]; then
+          echo "Brak genesis — inicjalizuję devnet..."
+          /opt/devnet/init-devnet.sh
+        fi
+        exec ${IPID_BIN:-wasmd} start --home /root/.ipid \
+          --rpc.laddr tcp://0.0.0.0:26657 \
+          --minimum-gas-prices 0nipi
+    environment:
+      - IPID_BIN=${IPID_BIN:-wasmd}
+      - CHAIN_ID=ipi-testnet-1
+      - DENOM=nipi
+      - HOME_DIR=/root/.ipid
+      - KEYRING=test
+      - MONIKER=ipi-devnet-node
+      - WITH_FAUCET=1
+    volumes:
+      - ipid-home:/root/.ipid
+      - ./init-devnet.sh:/opt/devnet/init-devnet.sh:ro
+    ports:
+      - "26656:26656"   # p2p
+      - "26657:26657"   # cometbft RPC
+      - "1317:1317"     # REST/API
+      - "9090:9090"     # gRPC
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:26657/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # Prosty faucet HTTP (opcjonalny). Aktywuj profilem: --profile faucet
+  # Obraz cosmjs/cosmos-faucet — konfiguracja szczegółowa w devnet/faucet.md.
+  faucet:
+    image: ghcr.io/cosmos/cosmjs-faucet:latest
+    container_name: ipi-devnet-faucet
+    profiles: ["faucet"]
+    depends_on:
+      node:
+        condition: service_healthy
+    environment:
+      - FAUCET_CONCURRENCY=2
+      - FAUCET_PORT=8000
+      - FAUCET_MEMO=IPI testnet faucet
+      - FAUCET_GAS_PRICE=0nipi
+      - FAUCET_GAS_LIMIT=100000
+      - FAUCET_ADDRESS_PREFIX=ipi
+      - FAUCET_TOKENS=IPI
+      - FAUCET_PATH_PATTERN=m/44'/118'/0'/0/a
+      # Krok wypłaty i zapas — w jednostkach display (IPI). Szczegóły: faucet.md
+      - FAUCET_CREDIT_AMOUNT_IPI=100
+      - FAUCET_REFILL_FACTOR=20
+      - FAUCET_REFILL_THRESHOLD=20
+      # Mnemonik konta 'faucet' z genesis — USTAW w .env, NIE commituj realnego!
+      - FAUCET_MNEMONIC=${FAUCET_MNEMONIC:-}
+      - FAUCET_TOKENS_URL=http://node:26657
+    command: ["start", "http://node:26657"]
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  ipid-home:
