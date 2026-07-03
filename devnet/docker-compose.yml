@@ -23,6 +23,8 @@ services:
         set -e
         if [ ! -f /root/.ipid/config/genesis.json ]; then
           echo "Brak genesis — inicjalizuję devnet..."
+          # init-devnet.sh ma shebang bash, a obraz alpine go nie zawiera — dołóż.
+          command -v bash >/dev/null 2>&1 || apk add --no-cache bash
           /opt/devnet/init-devnet.sh
         fi
         exec ${IPID_BIN:-wasmd} start --home /root/.ipid \
