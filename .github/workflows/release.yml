@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 env:
-  IMAGE_NAME: cosmwasm/wasmd
+  IMAGE_NAME: ipicoin/ipid
 
 jobs:
   release:
@@ -44,4 +44,4 @@ jobs:
           gh release create "$TAG" \
             --title "$TAG" \
             --draft \
-            --notes "See the [CHANGELOG](https://github.com/CosmWasm/wasmd/blob/$TAG/CHANGELOG.md) for details on the changes in this version."
+            --notes "See the [CHANGELOG](https://github.com/ipicoin/independency-daemon/blob/$TAG/CHANGELOG.md) for details on the changes in this version."
