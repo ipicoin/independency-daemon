@@ -22,7 +22,7 @@
 #   NETWORK   mainnet | testnet          (domyślnie: testnet)
 #   CHAIN_ID  identyfikator łańcucha      (domyślnie: zależnie od NETWORK)
 #   DENOM     denom bazowy               (domyślnie: nipi)
-#   DISPLAY   denom display              (domyślnie: ipi)
+#   DENOM_DISPLAY  denom display (unit)  (domyślnie: ipi)
 #   SYMBOL    symbol tokena              (domyślnie: IPI)
 #   EXPONENT  liczba miejsc dziesiętnych (domyślnie: 9)
 #   WASM_UPLOAD   Nobody | Everybody | AnyOfAddresses  (domyślnie: Nobody)
@@ -59,7 +59,9 @@ esac
 
 CHAIN_ID="${CHAIN_ID:-${DEFAULT_CHAIN_ID}}"
 DENOM="${DENOM:-nipi}"
-DISPLAY="${DISPLAY:-ipi}"
+# UWAGA: NIE używać nazwy DISPLAY — to zmienna X11 (na desktopie = ":0"),
+# nadpisałaby denom display nieprawidłową wartością. Stąd DENOM_DISPLAY.
+DENOM_DISPLAY="${DENOM_DISPLAY:-ipi}"
 SYMBOL="${SYMBOL:-IPI}"
 EXPONENT="${EXPONENT:-9}"
 WASM_UPLOAD="${WASM_UPLOAD:-Nobody}"
@@ -75,7 +77,6 @@ if [[ "${NETWORK}" == "mainnet" ]]; then
   UNBONDING_TIME="1814400s"          # 21 dni
   MIN_DEPOSIT_AMT="10000000000000"      # 10 000 ipi (10^13 nipi)   DRAFT
   EXPEDITED_MIN_DEPOSIT_AMT="50000000000000" # 50 000 ipi          DRAFT
-  CONSTANT_FEE_AMT="1000000000000000"   # 1 000 000 ipi            DRAFT
 else
   VOTING_PERIOD="172800s"            # 2 dni
   EXPEDITED_VOTING_PERIOD="86400s"   # 1 dzień
@@ -83,7 +84,6 @@ else
   UNBONDING_TIME="1209600s"          # 14 dni
   MIN_DEPOSIT_AMT="10000000000"         # 10 ipi                   DRAFT
   EXPEDITED_MIN_DEPOSIT_AMT="50000000000"    # 50 ipi              DRAFT
-  CONSTANT_FEE_AMT="1000000000000"      # 1 000 ipi                DRAFT
 fi
 
 # Ekonomia inflacji (DRAFT — decyzja DAO), spójna z manifestem: 7% / 20% / 67%.
@@ -97,7 +97,7 @@ COMMUNITY_TAX="0.020000000000000000"
 MIN_COMMISSION_RATE="0.050000000000000000"
 
 echo "==> Patchuję genesis: ${GENESIS}"
-echo "    NETWORK=${NETWORK}  CHAIN_ID=${CHAIN_ID}  DENOM=${DENOM}  DISPLAY=${DISPLAY} (exp ${EXPONENT})"
+echo "    NETWORK=${NETWORK}  CHAIN_ID=${CHAIN_ID}  DENOM=${DENOM}  DISPLAY=${DENOM_DISPLAY} (exp ${EXPONENT})"
 echo "    wasm.code_upload_access=${WASM_UPLOAD}  instantiate_default=${WASM_INSTANTIATE}"
 
 # ---------------------------------------------------------------------------
@@ -123,7 +123,7 @@ TMP="${GENESIS}.tmp.$$"
 jq \
   --arg chain_id "${CHAIN_ID}" \
   --arg denom "${DENOM}" \
-  --arg display "${DISPLAY}" \
+  --arg display "${DENOM_DISPLAY}" \
   --arg symbol "${SYMBOL}" \
   --argjson exponent "${EXPONENT}" \
   --arg unbonding "${UNBONDING_TIME}" \
@@ -139,7 +139,6 @@ jq \
   --arg max_dep_period "${MAX_DEPOSIT_PERIOD}" \
   --arg voting "${VOTING_PERIOD}" \
   --arg exp_voting "${EXPEDITED_VOTING_PERIOD}" \
-  --arg constfee "${CONSTANT_FEE_AMT}" \
   --arg comm_tax "${COMMUNITY_TAX}" \
   --arg wasm_upload "${WASM_UPLOAD}" \
   --argjson wasm_upload_addrs "${UPLOAD_ADDRS_JSON}" \
@@ -169,8 +168,8 @@ jq \
   | .app_state.gov.params.voting_period         = $voting
   | .app_state.gov.params.expedited_voting_period = $exp_voting
 
-  # --- crisis ---
-  | .app_state.crisis.constant_fee              = { "denom": $denom, "amount": $constfee }
+  # UWAGA: moduł 'crisis' USUNIĘTY z SDK ≥0.52 (nie ma go w app.go) — nie
+  # patchujemy .app_state.crisis (nie istnieje w genesis, byłby martwym wpisem).
 
   # --- distribution ---
   | .app_state.distribution.params.community_tax = $comm_tax
@@ -207,8 +206,9 @@ jq -r '
   "  staking.bond_denom   = " + .app_state.staking.params.bond_denom,
   "  mint.mint_denom      = " + .app_state.mint.params.mint_denom,
   "  gov.min_deposit[0]   = " + .app_state.gov.params.min_deposit[0].denom,
-  "  crisis.constant_fee  = " + .app_state.crisis.constant_fee.denom,
   "  bank.metadata.base   = " + .app_state.bank.denom_metadata[0].base,
+  "  bank.metadata.display= " + .app_state.bank.denom_metadata[0].display,
+  "  bank.metadata.symbol = " + .app_state.bank.denom_metadata[0].symbol,
   "  wasm.code_upload     = " + .app_state.wasm.params.code_upload_access.permission,
   "  chain_id             = " + .chain_id
 ' "${GENESIS}"

@@ -57,11 +57,9 @@ Relacja jednostek: **1 ipi = 10^9 nipi** (9 miejsc dziesiętnych).
 Denom wszystkich depozytów: `nipi`. Pozostałe pola (`quorum`, `threshold`,
 `veto_threshold`, `burn_*`) — wartości domyślne SDK, do przeglądu przez DAO.
 
-### crisis (`.app_state.crisis.constant_fee`)
-| Parametr        | Mainnet                    | Testnet                | Status |
-|-----------------|----------------------------|------------------------|--------|
-| `denom`         | `nipi`                     | `nipi`                 | KANON  |
-| `amount`        | `1000000000000000` (1 000 000 ipi) | `1000000000000` (1 000 ipi) | DRAFT |
+> Moduł `crisis` został USUNIĘTY z Cosmos SDK ≥0.52 — nie występuje w `app.go`
+> tego łańcucha, więc genesis nie zawiera `.app_state.crisis`. Nie ustawiamy
+> `constant_fee` (byłby martwym, ignorowanym wpisem).
 
 ### distribution (`.app_state.distribution.params`)
 | Parametr        | Wartość | Status |
