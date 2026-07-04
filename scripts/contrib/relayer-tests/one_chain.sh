@@ -69,7 +69,7 @@ chain_one_coins="100000000000nipi,100000000000umuon,100000000000test"
 chain_two_coins="100000000000nipi,100000000000umuon"
 delegate="100000000000nipi"
 
-redirect $BINARY --home $CHAINDIR/$CHAINID --chain-id $CHAINID init $CHAINID
+redirect $BINARY --home $CHAINDIR/$CHAINID --chain-id $CHAINID init $CHAINID --default-denom nipi
 sleep 1
 $BINARY --home $CHAINDIR/$CHAINID keys add validator $KEYRING --output json > $CHAINDIR/$CHAINID/validator_seed.json 2> /dev/null
 sleep 1
