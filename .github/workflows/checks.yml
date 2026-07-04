@@ -213,7 +213,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup-dependencies
     env:
-      IMAGE_NAME: cosmwasm/wasmd
+      IMAGE_NAME: ipicoin/ipid
     steps:
       - uses: actions/checkout@v6
 
