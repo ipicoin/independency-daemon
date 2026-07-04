@@ -51,8 +51,11 @@ BIN() { "$IPID_BIN" --home "$HOME_DIR" "$@"; }
 # 0. Czysty start (opcjonalnie). Ustaw KEEP_HOME=1 aby nie kasować.
 # ----------------------------------------------------------------------------
 if [ "${KEEP_HOME:-0}" != "1" ] && [ -d "$HOME_DIR" ]; then
-  echo ">> Kasuję istniejący $HOME_DIR (ustaw KEEP_HOME=1 aby zachować)"
-  rm -rf "$HOME_DIR"
+  echo ">> Czyszczę zawartość $HOME_DIR (ustaw KEEP_HOME=1 aby zachować)"
+  # NIE usuwaj samego $HOME_DIR — na devnecie to punkt montowania wolumenu
+  # (rm -rf na mountpoincie => 'Device or resource busy' => nonzero exit pod
+  # set -e => crash-loop kontenera). Usuwamy tylko ZAWARTOŚĆ katalogu.
+  rm -rf "$HOME_DIR"/* "$HOME_DIR"/.[!.]* "$HOME_DIR"/..?* 2>/dev/null || true
 fi
 
 # ----------------------------------------------------------------------------
@@ -63,7 +66,8 @@ BIN init "$MONIKER" --chain-id "$CHAIN_ID" --default-denom "$DENOM"
 GENESIS="$HOME_DIR/config/genesis.json"
 
 # ----------------------------------------------------------------------------
-# 2. Parametry genesis (bond_denom, gov, mint, crisis) — zgodne z manifestem.
+# 2. Parametry genesis (bond_denom, gov, mint) — zgodne z manifestem.
+#    (moduł crisis usunięty w SDK ≥0.52 — nie patchujemy .app_state.crisis)
 #    Preferujemy jq; fallback na sed dla bond_denom.
 # ----------------------------------------------------------------------------
 patch_genesis() {
@@ -74,7 +78,6 @@ patch_genesis() {
       '
       .app_state.staking.params.bond_denom = $d
       | .app_state.mint.params.mint_denom = $d
-      | .app_state.crisis.constant_fee.denom = $d
       | .app_state.gov.params.min_deposit[0].denom = $d
       | .app_state.gov.params.expedited_min_deposit[0].denom = $d
       | .app_state.gov.params.min_deposit[0].amount = "10000000000"
@@ -98,7 +101,21 @@ BIN genesis add-genesis-account "$VAL_KEY" "$VAL_BALANCE" --keyring-backend "$KE
 
 if [ "${WITH_FAUCET:-1}" = "1" ]; then
   if ! BIN keys show faucet --keyring-backend "$KEYRING" >/dev/null 2>&1; then
-    BIN keys add faucet --keyring-backend "$KEYRING"
+    # @cosmjs/faucet wymaga MNEMONIKA (FAUCET_MNEMONIC), a NIE surowego klucza.
+    # 'keys export --unarmored-hex' dałby hex privkey (bezużyteczny dla faucetu).
+    # Dlatego tworzymy konto z --output json i wyłuskujemy .mnemonic do pliku,
+    # który podkłada się do faucetu (keyring 'test' — TYLKO devnet).
+    FAUCET_MNEMONIC_FILE="$HOME_DIR/faucet.mnemonic"
+    if command -v jq >/dev/null 2>&1; then
+      BIN keys add faucet --keyring-backend "$KEYRING" --output json \
+        | jq -r '.mnemonic' > "$FAUCET_MNEMONIC_FILE"
+      chmod 600 "$FAUCET_MNEMONIC_FILE" 2>/dev/null || true
+      echo ">> Mnemonik faucetu zapisany do: $FAUCET_MNEMONIC_FILE"
+      echo "   Wstrzyknij do faucetu:  export FAUCET_MNEMONIC=\"\$(cat $FAUCET_MNEMONIC_FILE)\""
+    else
+      echo ">> jq niedostępne — mnemonik faucetu wypisany poniżej (zapisz ręcznie do FAUCET_MNEMONIC):"
+      BIN keys add faucet --keyring-backend "$KEYRING"
+    fi
   fi
   BIN genesis add-genesis-account faucet "$FAUCET_BALANCE" --keyring-backend "$KEYRING"
 fi
@@ -136,8 +153,19 @@ sed -i.bak 's#^laddr = "tcp://127.0.0.1:26657"#laddr = "tcp://0.0.0.0:26657"#' "
 # CORS dla RPC
 sed -i.bak 's/^cors_allowed_origins = \[\]/cors_allowed_origins = ["*"]/' "$CONFIG_TOML" && rm -f "$CONFIG_TOML.bak"
 
-# REST API + gRPC on
-sed -i.bak 's/^enable = false/enable = true/' "$APP_TOML" && rm -f "$APP_TOML.bak"
+# REST API + gRPC on.
+# UWAGA: prosty 's/^enable = false/enable = true/' flipuje KAŻDĄ sekcję
+# (telemetry, rosetta, grpc-web...). Ograniczamy zmianę do [api] i [grpc] awkiem,
+# śledząc bieżący nagłówek sekcji.
+awk '
+  /^\[/ { section=$0 }
+  section=="[api]"  && /^enable = false/               { sub(/^enable = false/,  "enable = true") }
+  section=="[grpc]" && /^enable = false/               { sub(/^enable = false/,  "enable = true") }
+  # gRPC musi słuchać na 0.0.0.0, inaczej nieosiągalny z hosta mimo publikacji portu.
+  section=="[grpc]" && /^address = "localhost:9090"/   { sub(/^address = "localhost:9090"/, "address = \"0.0.0.0:9090\"") }
+  { print }
+' "$APP_TOML" > "$APP_TOML.tmp" && mv "$APP_TOML.tmp" "$APP_TOML"
+# REST API address na 0.0.0.0 (unikalny wpis, sed bezpieczny)
 sed -i.bak 's#^address = "tcp://localhost:1317"#address = "tcp://0.0.0.0:1317"#' "$APP_TOML" && rm -f "$APP_TOML.bak"
 # minimalne opłaty (0 na devnet)
 sed -i.bak "s/^minimum-gas-prices = .*/minimum-gas-prices = \"0$DENOM\"/" "$APP_TOML" && rm -f "$APP_TOML.bak"

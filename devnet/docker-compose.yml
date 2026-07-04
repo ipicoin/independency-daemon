@@ -69,10 +69,12 @@ services:
       - FAUCET_GAS_PRICE=0nipi
       - FAUCET_GAS_LIMIT=100000
       - FAUCET_ADDRESS_PREFIX=ipi
-      - FAUCET_TOKENS=IPI
+      # Łańcuch zna WYŁĄCZNIE denom bazowy 'nipi' (IPI to tylko symbol display).
+      # Faucet operuje na denomie on-chain => nipi.
+      - FAUCET_TOKENS=nipi
       - FAUCET_PATH_PATTERN=m/44'/118'/0'/0/a
-      # Krok wypłaty i zapas — w jednostkach display (IPI). Szczegóły: faucet.md
-      - FAUCET_CREDIT_AMOUNT_IPI=100
+      # Krok wypłaty w nipi: 100 IPI = 100 000 000 000 nipi (1 IPI = 1e9 nipi).
+      - FAUCET_CREDIT_AMOUNT_NIPI=100000000000
       - FAUCET_REFILL_FACTOR=20
       - FAUCET_REFILL_THRESHOLD=20
       # Mnemonik konta 'faucet' z genesis — USTAW w .env, NIE commituj realnego!

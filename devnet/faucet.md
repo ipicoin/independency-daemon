@@ -23,12 +23,14 @@ Konto `faucet` jest tworzone i zasilane przez `init-devnet.sh` (500 000 IPI w ge
 Pobierz jego mnemonik i wstrzyknij do faucetu:
 
 ```bash
-# mnemonik konta faucet (keyring 'test' — TYLKO testnet!)
-ipid keys export faucet --unarmored-hex --unsafe --keyring-backend test --home ~/.ipid
-# lub przy tworzeniu konta zapisz mnemonik wypisany przez 'keys add'
+# UWAGA: 'keys export --unarmored-hex --unsafe' zwraca SUROWY KLUCZ PRYWATNY (hex),
+# a @cosmjs/faucet oczekuje MNEMONIKA — to dwie różne rzeczy.
+# init-devnet.sh zapisuje mnemonik faucetu do pliku (keyring 'test' — TYLKO testnet):
+cat ~/.ipid/faucet.mnemonic
+# (plik powstaje z 'ipid keys add faucet --output json | jq -r .mnemonic')
 
 # .env obok docker-compose.yml (NIE commituj realnego mnemonika):
-echo 'FAUCET_MNEMONIC="word1 word2 ... word24"' > devnet/.env
+echo "FAUCET_MNEMONIC=\"$(cat ~/.ipid/faucet.mnemonic)\"" > devnet/.env
 
 docker compose -f devnet/docker-compose.yml --profile faucet up -d
 ```
@@ -38,7 +40,7 @@ Wypłata:
 ```bash
 curl -X POST http://localhost:8000/credit \
   -H "Content-Type: application/json" \
-  -d '{"address":"ipi1...", "denom":"IPI"}'
+  -d '{"address":"ipi1...", "denom":"nipi"}'
 ```
 
 Status / dostępne tokeny: `GET http://localhost:8000/status`.
@@ -55,13 +57,12 @@ export FAUCET_GAS_PRICE=0nipi
 export FAUCET_GAS_LIMIT=100000
 export FAUCET_ADDRESS_PREFIX=ipi
 export FAUCET_PATH_PATTERN="m/44'/118'/0'/0/a"
-# denom bazowy 'nipi' z 9 miejscami -> 1 IPI = 1e9 nipi.
-# Format: NAZWA=fractionalDigits,minorDenom (patrz dokumentacja @cosmjs/faucet)
-export FAUCET_TOKENS="IPI"
-export FAUCET_MNEMONIC="<mnemonik konta faucet>"
+# Łańcuch zna tylko denom bazowy 'nipi' (IPI = symbol display). Faucet operuje na nipi.
+export FAUCET_TOKENS="nipi"
+export FAUCET_MNEMONIC="<mnemonik konta faucet z ~/.ipid/faucet.mnemonic>"
 
-# wypłata 100 IPI = 100 000 000 000 nipi na żądanie
-export FAUCET_CREDIT_AMOUNT_IPI=100
+# wypłata 100 IPI = 100 000 000 000 nipi na żądanie (1 IPI = 1e9 nipi)
+export FAUCET_CREDIT_AMOUNT_NIPI=100000000000
 export FAUCET_REFILL_FACTOR=20
 export FAUCET_REFILL_THRESHOLD=20
 
