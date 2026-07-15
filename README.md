@@ -2,10 +2,12 @@
 
 This repository is a tracking fork of
 [`CosmWasm/wasmd`](https://github.com/CosmWasm/wasmd). At the time of this
-notice, the fork contains no IPI-specific commits and is not an IPI node binary,
-canonical network release, or independent implementation. It is retained as an
-upstream engineering base while the IPI node architecture, reproducible build,
-genesis binding, upgrade path, and verification suite are defined publicly.
+notice, IPI-specific changes are limited to provenance documentation and
+fork-safe CI permissions. The fork contains no IPI consensus or application
+changes and is not an IPI node binary, canonical network release, or independent
+implementation. It is retained as an upstream engineering base while the IPI
+node architecture, reproducible build, genesis binding, upgrade path, and
+verification suite are defined publicly.
 
 Do not infer IPI compatibility, network identity, or production readiness from
 the repository name. The unmodified upstream documentation follows and remains

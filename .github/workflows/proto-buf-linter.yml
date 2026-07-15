@@ -13,10 +13,10 @@ jobs:
   buf-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: bufbuild/buf-setup-action@v1.50.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: bufbuild/buf-setup-action@a47c93e0b1648d5651a065437926377d060baa99 # v1.50.0
 
       # lint checks
-      - uses: bufbuild/buf-lint-action@v1
+      - uses: bufbuild/buf-lint-action@06f9dd823d873146471cfaaf108a993fe00e5325 # v1.1.1
         with:
           input: "proto"
