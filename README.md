@@ -1,3 +1,19 @@
+# IPI fork status
+
+This repository is a tracking fork of
+[`CosmWasm/wasmd`](https://github.com/CosmWasm/wasmd). At the time of this
+notice, the fork contains no IPI-specific commits and is not an IPI node binary,
+canonical network release, or independent implementation. It is retained as an
+upstream engineering base while the IPI node architecture, reproducible build,
+genesis binding, upgrade path, and verification suite are defined publicly.
+
+Do not infer IPI compatibility, network identity, or production readiness from
+the repository name. The unmodified upstream documentation follows and remains
+authoritative for wasmd itself. Project-wide IPI protocol changes belong in the
+[IPI Improvement Proposal process](https://github.com/ipicoin/.github/tree/main/ipi).
+
+---
+
 # Wasm Zone
 
 [![CircleCI](https://circleci.com/gh/CosmWasm/wasmd/tree/main.svg?style=shield)](https://circleci.com/gh/CosmWasm/wasmd/tree/main)
