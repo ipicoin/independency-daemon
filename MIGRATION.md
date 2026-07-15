@@ -56,7 +56,7 @@ niezmienione — to identyfikatory kodu, nie branding, i zależą od renamu modu
 - **Denom „ipi" / chainID „ipi"** — zastąpione przez SSOT: denom bazowy
   `nipi` (9 miejsc dziesiętnych), chain-id `ipi-mainnet-2`. Te wartości należą
   do **genesis**, nie do kodu — nie są hardkodowane w `app.go`.
-- **Prywatny skrypt docker (`laszczewski/wasmd`)** — prywatny artefakt
+- **Zewnętrzny prywatny skrypt Docker** — prywatny artefakt
   deweloperski, poza zakresem publicznego forka.
 
 ## Follow-up
