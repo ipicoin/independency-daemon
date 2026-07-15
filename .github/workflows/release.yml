@@ -13,6 +13,7 @@ env:
 
 jobs:
   release:
+    if: github.repository == 'CosmWasm/wasmd'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

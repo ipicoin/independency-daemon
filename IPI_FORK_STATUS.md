@@ -3,7 +3,8 @@
 - Upstream: [`CosmWasm/wasmd`](https://github.com/CosmWasm/wasmd)
 - Fork relationship: GitHub-native public fork
 - Upstream license: Apache License 2.0
-- IPI-specific commits at the time this notice was added: none
+- IPI-specific changes: provenance documentation and fork-safe CI permissions;
+  no consensus or application changes
 - IPI maturity: research base, not a released node
 
 The Git history, upstream contributors, `LICENSE`, `NOTICE`, security guidance,
