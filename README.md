@@ -1,18 +1,29 @@
-# IPI fork status
+# IPI node research foundation
 
-This repository is a tracking fork of
-[`CosmWasm/wasmd`](https://github.com/CosmWasm/wasmd). At the time of this
-notice, IPI-specific changes are limited to provenance documentation and
-fork-safe CI permissions. The fork contains no IPI consensus or application
-changes and is not an IPI node binary, canonical network release, or independent
-implementation. It is retained as an upstream engineering base while the IPI
-node architecture, reproducible build, genesis binding, upgrade path, and
-verification suite are defined publicly.
+This repository tracks
+[`CosmWasm/wasmd`](https://github.com/CosmWasm/wasmd) as a public engineering
+foundation for IPI node research. `wasmd` supplies a working Cosmos SDK and
+CometBFT application with IBC and CosmWasm integration, upstream tests, build
+tooling, Docker development paths, and a long attributable contributor history.
+Using that foundation allows IPI work to focus on explicit protocol modules,
+network identity, compatibility, deployment, and independent verification.
 
-Do not infer IPI compatibility, network identity, or production readiness from
-the repository name. The unmodified upstream documentation follows and remains
-authoritative for wasmd itself. Project-wide IPI protocol changes belong in the
+## Current IPI delta
+
+The fork is currently two commits ahead of upstream. Those changes document
+provenance and harden inherited GitHub Actions permissions; they do not modify
+consensus or application behavior. Consequently this repository is not yet an
+IPI node binary, canonical network release, or independent implementation.
+
+The next IPI-specific evidence required here is a reviewed node architecture,
+explicit module and parameter delta, reproducible build, canonical genesis
+binding, upgrade/recovery path, validator deployment documentation, and a
+versioned verification suite. Project-wide protocol changes belong in the
 [IPI Improvement Proposal process](https://github.com/ipicoin/.github/tree/main/ipi).
+
+The upstream documentation follows and remains authoritative for inherited
+`wasmd` behavior. See [`IPI_FORK_STATUS.md`](IPI_FORK_STATUS.md) for the concise
+fork boundary.
 
 ---
 
